@@ -1,6 +1,13 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { db } from './db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.join(__dirname, '../dist');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +20,11 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Serve static frontend build if present
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+}
 
 // Request logging
 app.use((req, res, next) => {
@@ -181,6 +193,18 @@ app.get('/api/stats', (req, res) => {
 app.post('/api/reset', (req, res) => {
   const data = db.reset();
   res.json({ message: 'Database reset to initial demo seeds', data });
+});
+
+// --- SPA FALLBACK ---
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  const indexPath = path.join(distPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.status(404).send('Not Found');
 });
 
 // Start Server
