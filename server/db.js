@@ -5,7 +5,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DATA_DIR = path.join(__dirname, 'data');
+// On Vercel, the deployed filesystem is read-only except for /tmp, and each
+// serverless invocation may run on a fresh instance — so this file-based DB
+// does not persist reliably in that environment. It still works for local
+// dev, `npm run server`, and tests; /tmp keeps writes from crashing on Vercel.
+const DATA_DIR = process.env.VERCEL
+  ? '/tmp/asksenior-data'
+  : path.join(__dirname, 'data');
+
 // Allow tests to point at an isolated file so they never touch real demo data.
 const DB_FILE = process.env.DB_FILE
   ? path.resolve(process.env.DB_FILE)

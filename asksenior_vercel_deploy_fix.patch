@@ -1,0 +1,34 @@
+diff --git a/api/[...path].js b/api/[...path].js
+new file mode 100644
+index 0000000..952706c
+--- /dev/null
++++ b/api/[...path].js
+@@ -0,0 +1,8 @@
++import { createApp } from '../server/app.js';
++
++// Vercel's Node runtime can run an Express app directly when it's the
++// default export — it wraps each request/response instead of calling
++// app.listen(), which never runs (and shouldn't) in a serverless function.
++const app = createApp();
++
++export default app;
+diff --git a/server/db.js b/server/db.js
+index 8564ffa..f23e4f1 100644
+--- a/server/db.js
++++ b/server/db.js
+@@ -5,7 +5,14 @@ import { fileURLToPath } from 'url';
+ const __filename = fileURLToPath(import.meta.url);
+ const __dirname = path.dirname(__filename);
+ 
+-const DATA_DIR = path.join(__dirname, 'data');
++// On Vercel, the deployed filesystem is read-only except for /tmp, and each
++// serverless invocation may run on a fresh instance — so this file-based DB
++// does not persist reliably in that environment. It still works for local
++// dev, `npm run server`, and tests; /tmp keeps writes from crashing on Vercel.
++const DATA_DIR = process.env.VERCEL
++  ? '/tmp/asksenior-data'
++  : path.join(__dirname, 'data');
++
+ // Allow tests to point at an isolated file so they never touch real demo data.
+ const DB_FILE = process.env.DB_FILE
+   ? path.resolve(process.env.DB_FILE)
