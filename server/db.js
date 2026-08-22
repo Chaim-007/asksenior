@@ -6,7 +6,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DATA_DIR = path.join(__dirname, 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
+// Allow tests to point at an isolated file so they never touch real demo data.
+const DB_FILE = process.env.DB_FILE
+  ? path.resolve(process.env.DB_FILE)
+  : path.join(DATA_DIR, 'db.json');
 
 const INITIAL_SUBJECTS = [
   { id: 'sub-1', name: 'Data Structures', code: 'CS201', color: 'indigo' },
